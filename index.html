@@ -3,6 +3,8 @@
 
 <head>
     <title>Wesley APK List</title>
+    <link rel="icon" href="images/apk.png">
+    <!--<link rel="icon" href="path/to/favicon.png">-->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
 
@@ -18,7 +20,6 @@
     <div id="apkList" class="list-group">
         <div id="title-bar" class="list-group-item active">
             <span class="title-span">APK列表</span>
-
             <div id="progress" class="progress dsnone">
                 <div class="progress-bar progress-bar-info"></div>
             </div>
@@ -27,9 +28,9 @@
 
 
     <span class="btn btn-info fileinput-button">
-    <i class="glyphicon glyphicon-plus"></i>
-    <input id="fileupload" type="file" name="files" accept=".apk" multiple>
-</span>
+        <i class="glyphicon glyphicon-plus"></i>
+        <input id="fileupload" type="file" name="files" accept=".apk" multiple>
+    </span>
 
     <div class="modal fade dialog-list-item" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -38,29 +39,34 @@
                     class="glyphicon glyphicon-download-alt pull-left"></span></a>
                 <a id="copyLink" class="list-group-item" data-clipboard-text="">複製下載連結
                 <span class="glyphicon glyphicon-file pull-left"></span></a>
-                <a id="delete" class="list-group-item">刪除<span
+                <a id="delete" class="list-group-item" data-toggle="modal" data-target=".dialog-delete">刪除<span
                     class="glyphicon glyphicon-trash pull-left"></span></a>
             </div>
         </div>
     </div>
 
-    <!--<div class="modal fade dialog-pwd" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
-     aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-dialog">
+    <div class="modal fade dialog-delete" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
             <div class="modal-content">
-                <div class="modal-body text-left">
-                    <label for="input_pwd">密碼</label>
-                    <input type="password" class="form-control" id="input_pwd" placeholder="Password"
-                           data-container="body" data-toggle="popover" data-trigger="manual" data-placement="top"
-                           data-content="密碼錯誤。">
-                    <br>
-                    <button id="pwd_enter" class="btn btn-default">確定</button>
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+                    <h4 class="modal-title" id="mySmallModalLabel">確定要刪除<br>
+                        <text id="delete-filename" class="color-skyblue"></text>
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <div class="btn-group btn-group-justified" role="group" aria-label="...">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">否</button>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <button id="btn-delete-yes" type="button" class="btn btn-primary">是</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>-->
 
     <div class="modal fade dialog-loading" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true"
         data-backdrop="static">
@@ -99,14 +105,8 @@
     //顯示讀取中圖示
     $('.dialog-loading').modal('show');
 
-    //登入過就啟用上傳功能
-    /*if(sessionStorage.isLogin == 1){
-        $("#fileupload").show();
-    } else {
-        $("#fileupload").hide();
-    }
-*/
     getFileList();
+    // getFileList_Test();
 
     /** 取得檔案列表 */
     function getFileList() {
@@ -132,18 +132,22 @@
         });
     }
 
-    /** 第一次開啟網頁需登入過一次才能上傳 */
-    /*$('.fileinput-button').on('click', function () {
-        if(sessionStorage.isLogin == 1){
-
-        } else {
-            //type為create
-            $("#input_pwd").data("type", "create");
-            //顯示密碼輸入框
-            $('.dialog-pwd').modal('show');
-            $('#input_pwd').focus();
+    //for dev
+    function getFileList_Test() {
+        $(".apkItem").remove();
+        var strDOM = "";
+        for (var i = 1; i < 10; i++) {
+            strDOM += '<a class="list-group-item apkItem" data-toggle="modal" data-target=".dialog-list-item">' +
+                '<div><strong>Test' + i + '</strong></div>' +
+                '<span class="list-group-item-text">Test' + i + '</span>' +
+                '<span class="glyphicon glyphicon-chevron-down pull-right"></span>' +
+                '</a>';
         }
-    });*/
+        $("#apkList").append(strDOM);
+
+        //隱藏讀取中圖示
+        $('.dialog-loading').modal('hide');
+    }
 
     /** 檔案上傳 */
     $('#fileupload').fileupload({
@@ -170,68 +174,20 @@
         $("#download").attr("href", location.href + "apk/" + strFileName);
         $("#copyLink").attr("data-clipboard-text", location.href + "apk/" + strFileName);
         $("#delete").data("filename", strFileName);
+        $("#delete-filename").text(strFileName);
     });
 
-    /** 輸入密碼框消失時 */
-    /*$(".dialog-pwd").on("hide.bs.modal", function (e) {
-        //清空輸入框文字
-        $("#input_pwd").val("");
-        //隱藏密碼錯誤訊息
-        $("#input_pwd").popover('hide');
-    });*/
-
-    /** 點擊刪除按鈕 */
-    $("#delete").on("click", function () {
+    $("#btn-delete-yes").on("click", function () {
         var strFileName = $("#delete").data("filename");
+
         //開始刪除檔案
         $.post("delete.php", { "filename": strFileName }, function (data) {
+            $(".dialog-delete").modal('hide');
             $(".dialog-list-item").modal('hide');
-            //            $('.dialog-pwd').modal('hide');
             showSuccess(data);
             getFileList();
         });
-        /*//type為delete
-        $("#input_pwd").data("type", "delete");
-        //顯示密碼輸入框
-        $('.dialog-pwd').modal('show');
-        $('#input_pwd').focus();*/
     });
-
-    /** 點擊密碼確定按鈕 */
-    /*$("#pwd_enter").on("click", function () {
-        //取得type及當前輸入密碼
-        var type = $("#input_pwd").data("type");
-        var pwd = $("#input_pwd").val();
-        //確認密碼是否正確
-        $.post("db_check_pwd.php", {"type": type, "pwd": pwd}, function (data) {
-            var jsonObj = JSON.parse(data);
-            //success == 1 為正確
-            if (jsonObj.success == 1) {
-                sessionStorage.isLogin = 1;
-                //刪除檔案
-                if (type == "delete") {
-                    var strFileName = $("#delete").data("filename");
-                    //開始刪除檔案
-                    $.post("delete.php", {"filename": strFileName}, function (data) {
-                        $(".dialog-list-item").modal('hide');
-                        $('.dialog-pwd').modal('hide');
-                        showSuccess(data);
-                        getFileList();
-                    });
-                    //新增檔案
-                } else if (type == "create") {
-                    //隱藏密碼輸入框
-                    $('.dialog-pwd').modal('hide');
-                    //讓上傳功能可用
-                    $("#fileupload").show();
-                }
-            }
-            else {
-                //顯示密碼錯誤提示
-                $("#input_pwd").popover('show');
-            }
-        });
-    });*/
 
     /** 顯示訊息 */
     function showSuccess(data) {
